@@ -25,49 +25,11 @@ class PhotoAlbumVC: UIViewController,MKMapViewDelegate, UICollectionViewDelegate
 	@IBOutlet weak var collectionView: UICollectionView!
 	
 	
-	@IBAction func deleteSelectedPhotos(sender: AnyObject) {
-		
-		//create empty array of photos To be deleted
-		var photosToDelete = [Photo]()
-	
-		for indexPath in selectedIndexes {
-            photosToDelete.append(fetchedResultsController.objectAtIndexPath(indexPath) as! Photo)
-        }
-		//iterate through and delete the objects
-		for photo in photosToDelete {
-			
-			//1 remove the photo from the application directory
-			photo.computedLocationImage = nil
-			
-			//2 remove the imagePath from the fetchedResultsController
-			self.sharedContext.deleteObject(photo)
-			updateDeleteButton()
-		}
-			 selectedIndexes = [NSIndexPath]()
-		
-			//save the changes(deletions)
-			dispatch_async(dispatch_get_main_queue()) {
-            CoreDataStackManager.sharedInstance().saveContext()
-        }
-		
-	}
-	
 	var selectedIndexes = [NSIndexPath]()
 	
 	var location:Location!
 	
 	let flickr = Flickr()
-	
-	func centerMapOnLocation() {
-		// set the region
-		let regionRadius: CLLocationDistance = 1000
-		let coordinateRegion = MKCoordinateRegionMakeWithDistance(location.coordinate, regionRadius, regionRadius)
-		mapView.setRegion(coordinateRegion, animated: true)
-		
-	}
-	
-	
-	
 	
 	
 	// MARK: - Life Cycle
@@ -75,9 +37,9 @@ class PhotoAlbumVC: UIViewController,MKMapViewDelegate, UICollectionViewDelegate
     override func viewDidLoad() {
         super.viewDidLoad()
         
-	var rightAddBarButtonItem:UIBarButtonItem = UIBarButtonItem(title: "NewCollection", style: UIBarButtonItemStyle.Plain, target: self, action: "newCollection:")
+		var rightAddBarButtonItem:UIBarButtonItem = UIBarButtonItem(title: "NewCollection", style: UIBarButtonItemStyle.Plain, target: self, action: "newCollection:")
 		
-	self.navigationItem.setRightBarButtonItems([rightAddBarButtonItem], animated: true)
+		self.navigationItem.setRightBarButtonItems([rightAddBarButtonItem], animated: true)
  
 		
 		// Step 2: Perform the fetch
@@ -91,34 +53,15 @@ class PhotoAlbumVC: UIViewController,MKMapViewDelegate, UICollectionViewDelegate
     }
 
 	
-	
-	
-	func newCollection (sender:UIButton) {
-		
-			getFlickrPhotos()
-	}
-
 	override func viewWillAppear(animated: Bool) {
 		super.viewWillAppear(animated)
 		
 		//TODO: Add a pin to the map
 		centerMapOnLocation()
-		
-		if location.photos.count == 0 {
-		getFlickrPhotos()
-		
-		}
-		
-		}
-	   func updateDeleteButton() {
-        if selectedIndexes.count > 0 {
-            deleteButton.enabled = true
-        } else {
-            deleteButton.enabled = false 
-        }
-    	}
+	}
 	
-	    override func viewDidLayoutSubviews() {
+	
+	override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         
         // Lay out the collection view so that cells take up 1/3 of the width,
@@ -132,8 +75,83 @@ class PhotoAlbumVC: UIViewController,MKMapViewDelegate, UICollectionViewDelegate
         collectionView.collectionViewLayout = layout
     }
 	
+	func centerMapOnLocation() {
+		// set the region
+		let regionRadius: CLLocationDistance = 1000
+		let coordinateRegion = MKCoordinateRegionMakeWithDistance(location.coordinate, regionRadius, regionRadius)
+		mapView.setRegion(coordinateRegion, animated: true)
+		
+	}
+	
+	func newCollection (sender:UIButton) {
+		
+		deleteAllPictures()
+		
+		getFlickrPhotos()
+	}
 
-// MARK: - UICollectionView Data Source and Delegate Methods
+	func updateDeleteButton() {
+        if selectedIndexes.count > 0 {
+            deleteButton.enabled = true
+        } else {
+            deleteButton.enabled = false 
+        }
+	}
+
+ 	@IBAction func deleteSelectedPhotos(sender: AnyObject) {
+		
+		//create empty array of photos To be deleted
+		var photosToDelete = [Photo]()
+	
+		//iterate through the selectedIndex index values and append each one
+		// to the photosToDelete array
+		for indexPath in selectedIndexes {
+            photosToDelete.append(fetchedResultsController.objectAtIndexPath(indexPath) as! Photo)
+        }
+		//iterate through the photosToDelete array
+		for photo in photosToDelete {
+			
+			//1 remove the photo from the application directory
+			photo.prepareForDeletion()
+			
+			//2 remove the image metaData from the fetchedResultsController
+			self.sharedContext.deleteObject(photo)
+			updateDeleteButton()
+		}
+			 selectedIndexes = [NSIndexPath]()
+		
+			//save the changes(deletions)
+			dispatch_async(dispatch_get_main_queue()) {
+            CoreDataStackManager.sharedInstance().saveContext()
+        }
+		
+	}
+ 
+ 
+	// Delete all images in photos array
+    func deleteAllPictures() {
+        for photo in fetchedResultsController.fetchedObjects as! [Photo] {
+			
+			//this method should get called automatically
+			//removes the photos from documents directory
+			photo.prepareForDeletion()
+			
+			//remove the photo metaData from core data
+			self.sharedContext.deleteObject(photo)
+			
+			updateDeleteButton()
+        }
+		 	selectedIndexes = [NSIndexPath]()
+		
+			//save the changes(deletions)
+			dispatch_async(dispatch_get_main_queue()) {
+            CoreDataStackManager.sharedInstance().saveContext()
+        }
+		    }
+
+
+
+	// MARK: - UICollectionView Data Source and Delegate Methods
     
     func numberOfSectionsInCollectionView(collectionView: UICollectionView) -> Int {
         return self.fetchedResultsController.sections?.count ?? 0
@@ -150,77 +168,92 @@ class PhotoAlbumVC: UIViewController,MKMapViewDelegate, UICollectionViewDelegate
 	func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
         
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier("PhotoCell", forIndexPath: indexPath) as! PhotoCell
-        
-		let photo = self.fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
 		
+		cell.activityView.startAnimating()
 		
-		if  photo.computedLocationImage != nil  {
-            cell.imageView.image = photo.computedLocationImage
-		
-		} else  if photo.imagePath == nil || photo.imagePath == "" {
-			cell.imageView.image = UIImage(named: "Map")
-		
-		
-	}      else { //if we have an imagePath but we still need to download it and save it
-
-			//this is the network call
-		let task = flickr.taskForImage(photo.imagePath!) { data, error in
-		
-			if let error = error {
-				print("location image download error: \(error.localizedDescription)")
-			}
-			
-			if let data = data {
-			 //create the image
-			 let image = UIImage(data: data)
-			 
-			 //update the model and store the image
-			 photo.computedLocationImage = image
-			 
-			 //update the cell on main thread
-			 dispatch_async(dispatch_get_main_queue()) {
-			 	cell.imageView?.image = photo.computedLocationImage
-				}
-			 }
-		}
-	}
-		
-		 cell.imageView!.image = photo.computedLocationImage
-	
+		configureCell(cell, atIndexPath: indexPath)
 			return cell
     }
 
 	
 	
-	    func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
+	func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
         
         let cell = collectionView.cellForItemAtIndexPath(indexPath) as! PhotoCell
         
         // Whenever a cell is tapped we do two operations
 		//1. will toggle its presence
 		//  in the selectedIndexes array
-        if let index = selectedIndexes.indexOf(indexPath) {
+		
+		if let index = selectedIndexes.indexOf(indexPath) {
             selectedIndexes.removeAtIndex(index)
         } else {
             selectedIndexes.append(indexPath)
         }
-        
-  		//2.we then decide if we should make the cell grey or revert to normal
-         if let index = self.selectedIndexes.indexOf(indexPath) {
+		//2. call a method to toggle the transparency of the cell
+		configureCell(cell, atIndexPath: indexPath)
+		
+		//TODO: update the bottom button
+		updateDeleteButton()
+		
+		}
+	
+	
+	//step1. pass the custom cell and indexPath into the method
+	func configureCell(cell: PhotoCell, atIndexPath indexPath: NSIndexPath) {
+		
+		//the image that will populate the imageView
+		var finalImage = UIImage()
+		
+		//cell.imageView!.image = nil
+		
+		//step 2. use the indexPath to get the model photo object from the FRC
+		let photo = self.fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
+	
+		//if we have a stored image then we use it to populate the view
+		if  photo.computedLocationImage != nil  {
+            cell.imageView.image = photo.computedLocationImage
+			cell.activityView.stopAnimating()
+		}
+			
+	   else { //if we have an imagePath but we still need to download it and save it
+
+			//ask flickr for the image at the URL
+		let task = flickr.taskForImage(photo.flickrImageURL!) { data, error in
+		
+			if let error = error {
+				print("location image download error: \(error.localizedDescription)")
+			}
+			//Get back the main thread to access the core data context and the UI
+			 dispatch_async(dispatch_get_main_queue()) {
+			
+			 if let data = data {
+			 //create the image
+			 let image = UIImage(data: data)
+			 
+			 //update the model and store the image
+			 photo.computedLocationImage = image
+			 
+			 
+			
+			 	cell.activityView.stopAnimating()
+			 	cell.imageView?.image = photo.computedLocationImage
+				}
+			 }
+		}
+	}
+	
+		 cell.imageView!.image = photo.computedLocationImage
+		  
+		if let index = self.selectedIndexes.indexOf(indexPath) {
             cell.imageView!.alpha = 0.5
         } else {
             cell.imageView!.alpha = 1.0
         }
-		
-		// if cells are selected or not selected we toggle the 
-		// availability of the delete button
-        updateDeleteButton()
-    }
-	
-	
-	
+	}
 	 
-    //MARK: - Core Data
+	
+	//MARK: - Core Data
 
     // Mark: - Fetched Results Controller
     
@@ -249,7 +282,8 @@ class PhotoAlbumVC: UIViewController,MKMapViewDelegate, UICollectionViewDelegate
     }
 	
 	//NSFetchedResultsController Delegate methods for UICollectionView
-	 var insertedIndexPaths: [NSIndexPath]!
+	//set the three empty arrays that will store the indexPath that need to be modified
+	var insertedIndexPaths: [NSIndexPath]!
     var deletedIndexPaths: [NSIndexPath]!
     var updatedIndexPaths: [NSIndexPath]!
 	
@@ -263,16 +297,16 @@ class PhotoAlbumVC: UIViewController,MKMapViewDelegate, UICollectionViewDelegate
         
 		}
 	//2
-	  func controller(controller: NSFetchedResultsController,
-	didChangeObject anObject: AnyObject,
-	atIndexPath indexPath: NSIndexPath?,
-	forChangeType type: NSFetchedResultsChangeType,
-	 newIndexPath: NSIndexPath?) {
+	func controller(controller: NSFetchedResultsController,
+		didChangeObject anObject: AnyObject,
+		atIndexPath indexPath: NSIndexPath?,
+		forChangeType type: NSFetchedResultsChangeType,
+	 	newIndexPath: NSIndexPath?) {
         
-        switch type{
+		switch type{
             
-        case .Insert:
-            insertedIndexPaths.append(newIndexPath!)
+		case .Insert:
+			insertedIndexPaths.append(newIndexPath!)
             break
         case .Delete:
             deletedIndexPaths.append(indexPath!)
@@ -282,15 +316,15 @@ class PhotoAlbumVC: UIViewController,MKMapViewDelegate, UICollectionViewDelegate
             break
         case .Move:
             break
-        default:
+		default:
             break
         }
     }
 	
 	
-func controllerDidChangeContent(controller: NSFetchedResultsController) {
+	func controllerDidChangeContent(controller: NSFetchedResultsController) {
         
-        print("in controllerDidChangeContent. changes.count: \(insertedIndexPaths.count + deletedIndexPaths.count)")
+		print("in controllerDidChangeContent. changes.count: \(insertedIndexPaths.count + deletedIndexPaths.count)")
         
         collectionView.performBatchUpdates({() -> Void in
             
@@ -308,48 +342,60 @@ func controllerDidChangeContent(controller: NSFetchedResultsController) {
             
             }, completion: nil)
 	
-			//This seems the best place to put this function
-			//it checks if the selectedIndex array is empty or not
-			// and enables or disables the delete button
 			updateDeleteButton()
-    }
+    	}
 	
 	//Mark: - networking call
-	
-	
-	
 	func getFlickrPhotos() {
 		flickr.longitude = location.longitude
 		flickr.latitude = location.latitude
+		flickr.pageToFetch = location.flickrPageToFetch++
 		
-		flickr.searchFlickrForPhotosByLatLon () { JSONResult, error in
+			dispatch_async(dispatch_get_main_queue()) {
+			CoreDataStackManager.sharedInstance().saveContext()
+		}
+	
+		flickr.newSearchFlickrForPhotosByLatLon () { JSONResult, error in
 			
 			if let error = error {
 				print(error)
+			
 			} else {
 			
-		if let photosDictionary = JSONResult.valueForKey("photos") as? [String:AnyObject] {
-			
-			if let photosArrayOfDictionaries = photosDictionary["photo"] as? [[String: AnyObject]] {
+		//get the main thread to access the shared context and the UI
+		dispatch_async(dispatch_get_main_queue()) {
 		
-			 // Parse the array of dictionaries
-			let _ = photosArrayOfDictionaries.map() { (dictionary: [String : AnyObject]) -> Photo in
-				let photo = Photo(dictionary: dictionary, context: self.sharedContext)
+		if let photosDictionary = JSONResult.valueForKey("photos") as? [String:AnyObject] {
+		
+		if let photosArrayOfDictionaries = photosDictionary["photo"] as? [[String: AnyObject]] {
+		
+		
+		// Parse the array of dictionaries
+		let _ = photosArrayOfDictionaries.map() { (dictionary: [String : AnyObject]) -> Photo in
+			
+			let photo = Photo(dictionary: dictionary, context: self.sharedContext)
 			
 				photo.location = self.location
 			
 					return photo
 				}
-				
-				
-				dispatch_async(dispatch_get_main_queue()) {
-				 CoreDataStackManager.sharedInstance().saveContext()
-							}
+	
+				CoreDataStackManager.sharedInstance().saveContext()
+			
 						}
 					}
 				}
 			}
 		}
 	}
+}
+
+	
+
+	
+
+
+			
+
 
 	

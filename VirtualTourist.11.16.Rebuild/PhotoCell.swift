@@ -19,6 +19,7 @@ class PhotoCell: UICollectionViewCell {
 
 	@IBOutlet weak var imageView: UIImageView!
 
+	@IBOutlet weak var activityView: UIActivityIndicatorView!
 var taskToCancelifCellIsReused: NSURLSessionTask? {
         
         didSet {

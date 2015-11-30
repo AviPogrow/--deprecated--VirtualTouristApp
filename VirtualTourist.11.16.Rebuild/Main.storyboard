@@ -17,7 +17,7 @@
                         <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" misplaced="YES" mapType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="Dtc-lS-W58">
+                            <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="Dtc-lS-W58">
                                 <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
                                 <animations/>
                                 <connections>
@@ -28,10 +28,10 @@
                         <animations/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                         <constraints>
-                            <constraint firstItem="wfy-db-euE" firstAttribute="top" secondItem="Dtc-lS-W58" secondAttribute="bottom" id="752-ZT-DkU"/>
-                            <constraint firstAttribute="trailing" secondItem="Dtc-lS-W58" secondAttribute="trailing" id="EZM-EW-Hl1"/>
-                            <constraint firstItem="Dtc-lS-W58" firstAttribute="top" secondItem="8bC-Xf-vdC" secondAttribute="top" id="biE-nP-BUn"/>
-                            <constraint firstItem="Dtc-lS-W58" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" id="qlo-Mh-2be"/>
+                            <constraint firstAttribute="bottom" secondItem="Dtc-lS-W58" secondAttribute="bottom" id="Iw2-hG-L7G"/>
+                            <constraint firstItem="Dtc-lS-W58" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" id="Sny-6K-0UV"/>
+                            <constraint firstItem="Dtc-lS-W58" firstAttribute="top" secondItem="8bC-Xf-vdC" secondAttribute="top" id="ivA-pG-ide"/>
+                            <constraint firstAttribute="trailing" secondItem="Dtc-lS-W58" secondAttribute="trailing" id="qEQ-aA-VG9"/>
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="Hl9-Fn-8Dq"/>
@@ -84,6 +84,12 @@
                                                     <rect key="frame" x="12" y="8" width="77" height="73"/>
                                                     <animations/>
                                                 </imageView>
+                                                <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" hidesWhenStopped="YES" animating="YES" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="xOE-Sz-BK1">
+                                                    <rect key="frame" x="40" y="40" width="20" height="20"/>
+                                                    <animations/>
+                                                    <color key="backgroundColor" red="0.0" green="0.96470594409999999" blue="0.31372550129999999" alpha="1" colorSpace="deviceRGB"/>
+                                                    <color key="color" red="0.031372550870000002" green="0.1019607931" blue="0.047058828179999998" alpha="1" colorSpace="deviceRGB"/>
+                                                </activityIndicatorView>
                                             </subviews>
                                             <animations/>
                                             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
@@ -97,6 +103,7 @@
                                             <constraint firstItem="ASB-CJ-Nqe" firstAttribute="leading" secondItem="bJB-Gi-DH7" secondAttribute="leadingMargin" constant="4" id="veR-V7-Bgt"/>
                                         </constraints>
                                         <connections>
+                                            <outlet property="activityView" destination="xOE-Sz-BK1" id="x5J-0g-XYF"/>
                                             <outlet property="imageView" destination="ASB-CJ-Nqe" id="5Ln-dz-mFg"/>
                                         </connections>
                                     </collectionViewCell>

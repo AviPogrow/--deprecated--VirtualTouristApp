@@ -14,11 +14,15 @@ class Location: NSManagedObject, MKAnnotation {
 
 	@NSManaged var latitude: Double
 	@NSManaged var longitude: Double
+	@NSManaged var flickrPageToFetch: Int
+	
 	@NSManaged var photos: [Photo]
 
 	struct Keys {
 		static let latitude = "latitude"
 		static let longitude = "longitude"
+		static let flickrPageToFetch = "Flickr_Page_To_Fetch"
+		
 	}
  
 	
@@ -31,7 +35,9 @@ class Location: NSManagedObject, MKAnnotation {
       return "\(longitude)"
     }
 	
-//4. include this standard init method
+
+	
+ // include this standard init method
   override init(entity: NSEntityDescription, insertIntoManagedObjectContext
   context: NSManagedObjectContext?) {
   	super.init(entity: entity, insertIntoManagedObjectContext: context)
@@ -56,6 +62,8 @@ class Location: NSManagedObject, MKAnnotation {
    longitude = dictionary[Keys.longitude] as! Double
 	
     latitude = dictionary [Keys.latitude] as! Double
+	
+	flickrPageToFetch = dictionary[Keys.flickrPageToFetch] as! Int
 	
 	CoreDataStackManager.sharedInstance().saveContext()	
 	}
