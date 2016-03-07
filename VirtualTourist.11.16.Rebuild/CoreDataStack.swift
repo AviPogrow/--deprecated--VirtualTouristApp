@@ -18,7 +18,7 @@ class CoreDataStackManager {
     
     // MARK: - Shared Instance
     
-   
+	
     class func sharedInstance() -> CoreDataStackManager {
         struct Static {
             static let instance = CoreDataStackManager()
@@ -47,17 +47,11 @@ class CoreDataStackManager {
         return NSManagedObjectModel(contentsOfURL: modelURL)!
     }()
     
-    /**
-     * The Persistent Store Coordinator is an object that the Context uses to interact with the underlying file system. Usually
-     * the persistent store coordinator object uses an SQLite database file to save the managed objects. But it is possible to 
-     * configure it to use XML or other formats. 
-     *
-     * Typically you will construct your persistent store manager exactly like this. It needs two pieces of information in order
-     * to be set up:
-     *
-     * - The path to the sqlite file that will be used. Usually in the documents directory
-     * - A configured Managed Object Model. See the next property for details.
-     */
+   //persistentStoreCoordinator has three important parts
+   //1. 
+   //a. The persistent Store (SQL file)
+   //b. A path to the Document directory where the SQL file will be held
+   //c. instructions on whether it should run on the main queue of backround thread
     
     lazy var persistentStoreCoordinator: NSPersistentStoreCoordinator? = {
         // The persistent store coordinator for the application. This implementation creates and return a coordinator, having added the store for the application to it. This property is optional since there are legitimate error conditions that could cause the creation of the store to fail.
